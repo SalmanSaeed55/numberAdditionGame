@@ -1,17 +1,54 @@
 import random
+import os
+
+wins = 0
 
 def random_number():
-    return random.randint(17,29)
+    return random.randint(0,29)
 
 def die_roll():
     return random.randint(1,6)
 
-def addition_game():
+def points_system(win, usage, current_game):
+    with open("lifetime_scores.txt", "r") as file:
+        total_wins = int(file.readline().strip().split(" = ")[1])
+        total_points = int(file.readline().strip().split(" = ")[1])
+
+    with open("lifetime_scores.txt", "w") as file:
+        if current_game:
+            total_wins += 1
+            total_points += usage
+        else:
+            if total_points - usage < 0:
+                total_points = 0
+            else:
+                total_points -= usage
+
+        file.write(f"Total wins = {total_wins}\n")
+        file.write(f"Total points = {total_points}\n")
+
+        print(f"Total wins:\t{total_wins}")
+        print(f"Total points:\t{total_points}")
+
+
+def addition_game(win):
+    used_points = 0
+    game_won = False
     guess = random_number()
     repeat = True
     crashed = False
     addition_total = 0
     times_added = 0
+    score_tracker = "lifetime_scores.txt"
+
+    if os.path.exists(score_tracker):
+        with open(score_tracker, "r") as file:
+            print(file.read())
+    else:
+        with open(score_tracker, "w") as file:
+            file.writelines("Lifetime Score = 0\n")
+            file.writelines("Points = 100")
+            print(file.read())
 
     while repeat:
         print(f"Value to reach:\t{guess}")
@@ -31,18 +68,21 @@ def addition_game():
             print("Invalid input - game crashed")
 
     if not crashed:
+        used_points = times_added * 5
         print(f"Final total:\t{addition_total}")
-        distance_guess = guess - addition_total
 
-        if distance_guess == 0:
-            print(f"Congratulations! You won with 0 away from {guess}!\nYou won with {times_added} dice rolled!")
-        elif -5 <= distance_guess <= 5:
-            print(f"You were {abs(distance_guess)} away from {guess}!\nYou won with {times_added} dice rolled!")
+        if addition_total == guess:
+            print(f"Congratulations! You got {guess}!\nYou won with {times_added} dice rolled!")
+            win += 1
+            used_points = 50
+            game_won = True
         else:
-            print("Invalid try - try again")
+            print(f"You were unable to get {guess}")
+
+        points_system(wins, used_points, game_won)
 
 while True:
-    addition_game()
+    addition_game(wins)
 
     try:
         again = int(input("Do you want to play again? [1] yes [2] no\t"))
